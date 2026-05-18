@@ -8,6 +8,10 @@ find_package(nav_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(Eigen3 REQUIRED)
+find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
+find_package(pybind11 QUIET)
+
+include_directories(include)
 
 add_executable(imu_sim src/imu_sim_node.cpp)
 ament_target_dependencies(imu_sim rclcpp sensor_msgs)
@@ -19,6 +23,16 @@ add_executable(mekf src/mekf_node.cpp)
 target_include_directories(mekf PRIVATE ${EIGEN3_INCLUDE_DIRS})
 ament_target_dependencies(mekf rclcpp sensor_msgs geometry_msgs)
 
+if(pybind11_FOUND)
+  pybind11_add_module(quad_sim_cpp src/bindings.cpp)
+  target_include_directories(quad_sim_cpp PRIVATE include)
+  install(TARGETS quad_sim_cpp DESTINATION lib/${PROJECT_NAME})
+  message(STATUS "pybind11 found — building Python extension quad_sim_cpp")
+else()
+  message(WARNING "pybind11 not found — skipping Python bindings")
+endif()
+
 install(TARGETS imu_sim drone_dynamics mekf DESTINATION lib/${PROJECT_NAME})
+install(DIRECTORY include/ DESTINATION include)
 
 ament_package()
