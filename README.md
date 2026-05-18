@@ -2,33 +2,6 @@
 
 6-DOF quadrotor simulator with cascaded PID control, MEKF attitude estimation, and a PPO-trained attitude recovery policy. Physics core in C++17, exposed to Python via pybind11 for RL training at ~1000 steps/sec on CPU.
 
-## Architecture
-
-```
-              ┌──────────────────────┐
-              │   drone_dynamics     │  C++ RK4 @ 200 Hz
-              │   (Newton-Euler)     │  ADIS16470 IMU noise model
-              └──────┬───────┬───────┘
-                     │       │
-             /drone/odom  /imu/data_raw
-                     │       │
-          ┌──────────┘   ┌───▼──────────┐
-          │              │     mekf     │  Multiplicative EKF on SO(3)
-          │              │  6-state err │  delta_theta + gyro bias
-          │              └───┬──────────┘
-          │                  │ /imu/attitude
-          │         ┌────────▼────────┐
-          │         │  pid_controller │  cascaded position + attitude loops
-          │         │  rl_recovery    │  PPO policy, engages on tilt > 45 deg
-          │         └────────┬────────┘
-          │                  │ /drone/motor_speeds
-          └────────┬─────────┘
-                   │
-            ┌──────▼──────┐
-            │  rerun_viz  │  3D frame + live telemetry
-            └─────────────┘
-```
-
 ## Stack
 
 | Layer | Detail |
