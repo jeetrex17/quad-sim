@@ -19,11 +19,12 @@
 docker run -it osrf/ros:humble-desktop bash
 
 # inside container
-git clone https://github.com/jeetrex17/quad-sim /ros2_ws
+mkdir -p /ros2_ws/src
+git clone https://github.com/jeetrex17/quad-sim /ros2_ws/src/quad-sim
 cd /ros2_ws
 
 apt-get install -y python3-pybind11 pybind11-dev ros-humble-eigen3-cmake-module
-pip install -r requirements.txt
+pip install -r src/quad-sim/requirements.txt
 
 colcon build --packages-select drone_sim
 source install/setup.bash
@@ -40,6 +41,7 @@ RL attitude recovery evaluation:
 ```bash
 ros2 launch drone_sim rl_eval.launch.py
 ```
+If `scripts/quad_recovery_policy.zip` is not present, run the training command below first.
 
 Trigger a recovery event (separate terminal):
 ```bash
@@ -66,7 +68,7 @@ Open the rerun viewer on the Mac host: `rerun`
 ## Training
 
 ```bash
-cd /ros2_ws/src/drone_sim/scripts
+cd /ros2_ws/src/quad-sim/scripts
 python3 train_ppo.py   # ~8 min on CPU, saves quad_recovery_policy.zip
 ```
 

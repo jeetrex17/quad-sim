@@ -43,10 +43,14 @@ install(PROGRAMS
   DESTINATION lib/${PROJECT_NAME}
 )
 
-install(FILES
-  scripts/quad_recovery_policy.zip
-  DESTINATION lib/${PROJECT_NAME}
-)
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/scripts/quad_recovery_policy.zip")
+  install(FILES
+    scripts/quad_recovery_policy.zip
+    DESTINATION lib/${PROJECT_NAME}
+  )
+else()
+  message(WARNING "scripts/quad_recovery_policy.zip not found; run scripts/train_ppo.py to regenerate the RL policy")
+endif()
 
 install(DIRECTORY launch
   DESTINATION share/${PROJECT_NAME}

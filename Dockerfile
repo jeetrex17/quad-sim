@@ -7,8 +7,7 @@ RUN apt-get update && apt-get install -y \
     ros-humble-eigen3-cmake-module \
  && rm -rf /var/lib/apt/lists/*
 
-RUN pip install "numpy<2" rerun-sdk
-RUN pip install torch --index-url https://download.pytorch.org/whl/cpu
-RUN pip install gymnasium stable-baselines3
+COPY requirements.txt /tmp/quad-sim-requirements.txt
+RUN pip install -r /tmp/quad-sim-requirements.txt
 
 WORKDIR /ros2_ws

@@ -1,8 +1,23 @@
 #!/usr/bin/env python3
-import sys, os
+import sys
+from pathlib import Path
 
-_ws = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
-sys.path.insert(0, os.path.join(_ws, 'install', 'drone_sim', 'lib', 'drone_sim'))
+_SCRIPT = Path(__file__).resolve()
+_LIB_CANDIDATES = []
+
+try:
+    from ament_index_python.packages import get_package_prefix
+    _LIB_CANDIDATES.append(Path(get_package_prefix("drone_sim")) / "lib" / "drone_sim")
+except Exception:
+    pass
+
+for parent in _SCRIPT.parents:
+    _LIB_CANDIDATES.append(parent / "install" / "drone_sim" / "lib" / "drone_sim")
+
+for lib_dir in _LIB_CANDIDATES:
+    if lib_dir.exists():
+        sys.path.insert(0, str(lib_dir))
+        break
 
 import numpy as np
 import gymnasium as gym
@@ -11,9 +26,10 @@ from gymnasium import spaces
 try:
     import quad_sim_cpp as qsc
 except ModuleNotFoundError as e:
+    tried = "\n".join(f"  - {path}" for path in _LIB_CANDIDATES)
     raise RuntimeError(
         "quad_sim_cpp not found. Build first: colcon build --packages-select drone_sim\n"
-        f"Expected .so in: {os.path.join(_ws, 'install/drone_sim/lib/drone_sim/')}"
+        f"Searched:\n{tried}"
     ) from e
 
 W_HOVER  = qsc.W_HOVER
