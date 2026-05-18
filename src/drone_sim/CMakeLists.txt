@@ -39,6 +39,7 @@ install(PROGRAMS
   scripts/pid_controller.py
   scripts/rerun_viz.py
   scripts/rl_recovery_node.py
+  scripts/teleop_node.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

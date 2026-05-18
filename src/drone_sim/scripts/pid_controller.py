@@ -12,6 +12,7 @@ import rclpy
 from rclpy.node import Node
 from nav_msgs.msg import Odometry
 from std_msgs.msg import Float64MultiArray
+from geometry_msgs.msg import Point
 
 # Must match drone_dynamics_node.cpp
 MASS    = 0.5
@@ -97,10 +98,16 @@ class QuadPID(Node):
         self.pid_pitch = PID(kp=6.0, ki=0.0, kd=1.0, i_limit=0.5)
         self.pid_yaw   = PID(kp=2.0, ki=0.0, kd=0.5, i_limit=0.5)
 
+        self._manual_target = None  # set by teleop; None = follow trajectory
+
         self.motor_pub = self.create_publisher(Float64MultiArray, "/drone/motor_speeds", 10)
         self.create_subscription(Odometry, "/drone/odom", self.odom_cb, 10)
+        self.create_subscription(Point, "/drone/setpoint", self._setpoint_cb, 1)
 
-        self.get_logger().info("PID controller ready, following waypoint trajectory")
+        self.get_logger().info("PID controller ready  (publish to /drone/setpoint to override trajectory)")
+
+    def _setpoint_cb(self, msg: Point):
+        self._manual_target = (msg.x, msg.y, msg.z)
 
     def odom_cb(self, msg: Odometry):
         stamp = msg.header.stamp.sec + msg.header.stamp.nanosec * 1e-9
@@ -116,8 +123,11 @@ class QuadPID(Node):
 
         roll, pitch, yaw = quat_to_euler(q.w, q.x, q.y, q.z)
 
-        # Setpoint from trajectory
-        xd, yd, zd = self.traj.at(t)
+        # Setpoint: manual override takes priority over trajectory
+        if self._manual_target is not None:
+            xd, yd, zd = self._manual_target
+        else:
+            xd, yd, zd = self.traj.at(t)
 
         # --- Outer loop: position -> thrust + desired attitude ---
         F = MASS * GRAVITY + self.pid_z.step(zd - p.z, v.z, DT)
