@@ -1,0 +1,4 @@
+numpy<2
+rerun-sdk
+gymnasium
+stable-baselines3

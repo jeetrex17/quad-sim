@@ -10,7 +10,7 @@
 | Estimation | MEKF, 6-state error state, Joseph-form covariance update |
 | Control | Cascaded PID, X-config motor mixing |
 | RL | Gymnasium env, SB3 PPO, pybind11 C++ physics backend |
-| Viz | rerun.io 0.32, 3D drone frame + live plots |
+| Viz | rerun.io 0.32, procedural flight lab, drone model, path, targets, and live plots |
 | Middleware | ROS 2 Humble |
 
 ## Build
@@ -23,9 +23,7 @@ git clone https://github.com/jeetrex17/quad-sim /ros2_ws
 cd /ros2_ws
 
 apt-get install -y python3-pybind11 pybind11-dev ros-humble-eigen3-cmake-module
-pip install "numpy<2" rerun-sdk
-pip install torch --index-url https://download.pytorch.org/whl/cpu
-pip install gymnasium stable-baselines3
+pip install -r requirements.txt
 
 colcon build --packages-select drone_sim
 source install/setup.bash
