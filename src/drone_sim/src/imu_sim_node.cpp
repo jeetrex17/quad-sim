@@ -28,7 +28,7 @@ public:
             [this]() { publish(); });
 
         RCLCPP_INFO(get_logger(),
-            "IMU simulator running at 200 Hz — ADIS16470 noise model");
+            "IMU simulator running at 200 Hz, ADIS16470 noise model");
     }
 
 private:
