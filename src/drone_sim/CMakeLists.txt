@@ -35,4 +35,20 @@ endif()
 install(TARGETS imu_sim drone_dynamics mekf DESTINATION lib/${PROJECT_NAME})
 install(DIRECTORY include/ DESTINATION include)
 
+install(PROGRAMS
+  scripts/pid_controller.py
+  scripts/rerun_viz.py
+  scripts/rl_recovery_node.py
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+install(FILES
+  scripts/quad_recovery_policy.zip
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+install(DIRECTORY launch
+  DESTINATION share/${PROJECT_NAME}
+)
+
 ament_package()

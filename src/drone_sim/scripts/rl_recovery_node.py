@@ -2,8 +2,12 @@
 import sys, os
 import numpy as np
 
-_ws = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
-sys.path.insert(0, os.path.join(_ws, 'install', 'drone_sim', 'lib', 'drone_sim'))
+try:
+    from ament_index_python.packages import get_package_prefix as _gpp
+    _lib_dir = os.path.join(_gpp('drone_sim'), 'lib', 'drone_sim')
+except Exception:
+    _lib_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, _lib_dir)
 
 import rclpy
 from rclpy.node import Node
@@ -17,7 +21,7 @@ W_HOVER          = 197.92
 W_SCALE          = 50.0
 ENGAGE_QW        = 0.707   # engage when tilt > 45 deg
 DISENGAGE_QW     = 0.940   # disengage when tilt < 20 deg (hysteresis)
-POLICY_PATH      = os.path.join(os.path.dirname(__file__), 'quad_recovery_policy')
+POLICY_PATH      = os.path.join(_lib_dir, 'quad_recovery_policy')
 
 
 class RLRecoveryNode(Node):
