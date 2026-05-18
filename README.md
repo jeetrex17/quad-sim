@@ -10,7 +10,7 @@
 | Estimation | MEKF, 6-state error state, Joseph-form covariance update |
 | Control | Cascaded PID, X-config motor mixing |
 | RL | Gymnasium env, SB3 PPO, pybind11 C++ physics backend |
-| Viz | rerun.io 0.32, procedural flight lab, drone model, path, targets, and live plots |
+| Viz | rerun.io, procedural flight lab, drone model, path, targets, and live plots |
 | Middleware | ROS 2 Humble |
 
 ## Build

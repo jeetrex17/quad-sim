@@ -7,7 +7,9 @@ RUN apt-get update && apt-get install -y \
     ros-humble-eigen3-cmake-module \
  && rm -rf /var/lib/apt/lists/*
 
+RUN pip install --upgrade pip
+
 COPY requirements.txt /tmp/quad-sim-requirements.txt
-RUN pip install -r /tmp/quad-sim-requirements.txt
+RUN pip install --ignore-installed -r /tmp/quad-sim-requirements.txt
 
 WORKDIR /ros2_ws

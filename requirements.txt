@@ -1,4 +1,6 @@
-numpy<2
-rerun-sdk
+--extra-index-url https://download.pytorch.org/whl/cpu
+numpy>=1.23,<2
+rerun-sdk==0.22.1
+torch==2.5.1+cpu
 gymnasium
 stable-baselines3
