@@ -58,6 +58,12 @@ def quat_to_euler(w, x, y, z):
     return math.degrees(roll), math.degrees(pitch), math.degrees(yaw)
 
 
+def _scalar(value):
+    if hasattr(rr, "Scalars"):
+        return rr.Scalars(value)
+    return rr.Scalar(value)
+
+
 def _waypoint_at(t):
     if t <= _WAYPOINT_TIMES[0]:
         return _WAYPOINTS[0]
@@ -369,37 +375,37 @@ class RerunVizNode(Node):
             radii=0.065,
             colors=[[255, 80, 220]],
         ))
-        rr.log("mission/tracking_error", rr.Scalars(err))
+        rr.log("mission/tracking_error", _scalar(err))
 
-        rr.log("drone/altitude",   rr.Scalars(p.z))
-        rr.log("drone/velocity/x", rr.Scalars(v.x))
-        rr.log("drone/velocity/y", rr.Scalars(v.y))
-        rr.log("drone/velocity/z", rr.Scalars(v.z))
+        rr.log("drone/altitude",   _scalar(p.z))
+        rr.log("drone/velocity/x", _scalar(v.x))
+        rr.log("drone/velocity/y", _scalar(v.y))
+        rr.log("drone/velocity/z", _scalar(v.z))
 
         roll, pitch, yaw = quat_to_euler(q.w, q.x, q.y, q.z)
-        rr.log("attitude/true/roll",  rr.Scalars(roll))
-        rr.log("attitude/true/pitch", rr.Scalars(pitch))
-        rr.log("attitude/true/yaw",   rr.Scalars(yaw))
+        rr.log("attitude/true/roll",  _scalar(roll))
+        rr.log("attitude/true/pitch", _scalar(pitch))
+        rr.log("attitude/true/yaw",   _scalar(yaw))
 
     def imu_cb(self, msg: Imu):
-        rr.log("imu/gyro/x",  rr.Scalars(msg.angular_velocity.x))
-        rr.log("imu/gyro/y",  rr.Scalars(msg.angular_velocity.y))
-        rr.log("imu/gyro/z",  rr.Scalars(msg.angular_velocity.z))
-        rr.log("imu/accel/z", rr.Scalars(msg.linear_acceleration.z))
+        rr.log("imu/gyro/x",  _scalar(msg.angular_velocity.x))
+        rr.log("imu/gyro/y",  _scalar(msg.angular_velocity.y))
+        rr.log("imu/gyro/z",  _scalar(msg.angular_velocity.z))
+        rr.log("imu/accel/z", _scalar(msg.linear_acceleration.z))
 
     def attitude_cb(self, msg: QuaternionStamped):
         q = msg.quaternion
         roll, pitch, yaw = quat_to_euler(q.w, q.x, q.y, q.z)
-        rr.log("attitude/mekf/roll",  rr.Scalars(roll))
-        rr.log("attitude/mekf/pitch", rr.Scalars(pitch))
-        rr.log("attitude/mekf/yaw",   rr.Scalars(yaw))
+        rr.log("attitude/mekf/roll",  _scalar(roll))
+        rr.log("attitude/mekf/pitch", _scalar(pitch))
+        rr.log("attitude/mekf/yaw",   _scalar(yaw))
 
     def motors_cb(self, msg: Float64MultiArray):
         if len(msg.data) < 4:
             return
         self._last_motors = [float(x) for x in msg.data[:4]]
         for i, speed in enumerate(self._last_motors, start=1):
-            rr.log(f"motors/m{i}_rad_s", rr.Scalars(speed))
+            rr.log(f"motors/m{i}_rad_s", _scalar(speed))
 
     def setpoint_cb(self, msg: Point):
         self._manual_target = np.array([msg.x, msg.y, msg.z], dtype=np.float64)
