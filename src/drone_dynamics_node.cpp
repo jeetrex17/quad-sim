@@ -52,6 +52,25 @@ private:
     {
         state_ = qd_rk4(state_, motors_, DT);
 
+        if (state_.pz < 0.0) {
+            state_.pz = 0.0;
+            state_.vx = state_.vy = state_.vz = 0.0;
+            if (!crashed_) {
+                RCLCPP_WARN(get_logger(), "GROUND IMPACT at (%.2f, %.2f)", state_.px, state_.py);
+                crashed_ = true;
+            }
+        }
+
+        constexpr double WALL_X = 3.0;
+        if (state_.px > WALL_X) {
+            state_.px = WALL_X;
+            state_.vx = state_.vy = state_.vz = 0.0;
+            if (!crashed_) {
+                RCLCPP_WARN(get_logger(), "WALL IMPACT at z=%.2f", state_.pz);
+                crashed_ = true;
+            }
+        }
+
         for (int i = 0; i < 3; ++i) {
             gyro_bias_[i]  += gyro_bwalk_(rng_);
             accel_bias_[i] += accel_bwalk_(rng_);
@@ -117,8 +136,9 @@ private:
     double gyro_bias_[3]  = {};
     double accel_bias_[3] = {};
 
-    QuadState           state_;
+    QuadState            state_;
     std::array<double,4> motors_;
+    bool                 crashed_ = false;
 };
 
 int main(int argc, char **argv)

@@ -369,6 +369,112 @@ def _drone_body_mesh():
     return _combine_meshes(meshes)
 
 
+def _warehouse_shell_mesh():
+    wall = [58, 64, 72, 180]
+    floor = [28, 31, 35, 255]
+    trim = [92, 102, 112, 210]
+    door = [74, 82, 92, 230]
+
+    meshes = [
+        _mesh_box([0.35, 0.0, -0.025], [8.6, 7.2, 0.05], floor),
+        _mesh_box([0.35, -3.6, 2.15], [8.6, 0.07, 4.3], wall),
+        _mesh_box([0.35, 3.6, 2.15], [8.6, 0.07, 4.3], wall),
+        _mesh_box([-3.95, 0.0, 2.15], [0.07, 7.2, 4.3], wall),
+        _mesh_box([4.65, -1.9, 2.15], [0.07, 3.4, 4.3], wall),
+        _mesh_box([4.65, 2.55, 2.15], [0.07, 2.1, 4.3], wall),
+        _mesh_box([4.65, 0.65, 3.65], [0.08, 1.7, 1.3], wall),
+        _mesh_box([4.60, 0.65, 1.15], [0.06, 1.55, 2.1], door),
+    ]
+
+    for x in np.linspace(-3.2, 3.8, 6):
+        meshes.append(_mesh_box([x, -3.52, 2.15], [0.08, 0.16, 4.3], trim))
+        meshes.append(_mesh_box([x, 3.52, 2.15], [0.08, 0.16, 4.3], trim))
+        meshes.append(_mesh_box([x, 0.0, 4.15], [0.10, 7.0, 0.08], [90, 98, 110, 220]))
+
+    for y in (-3.45, 3.45):
+        meshes.append(_mesh_box([0.35, y, 4.25], [8.4, 0.10, 0.10], trim))
+    for x in (-3.85, 4.55):
+        meshes.append(_mesh_box([x, 0.0, 4.25], [0.10, 7.0, 0.10], trim))
+
+    return _combine_meshes(meshes)
+
+
+def _warehouse_rack_mesh():
+    meshes = []
+    rack_blue = [40, 110, 210, 235]
+    shelf_orange = [235, 145, 45, 235]
+    crate_colors = [
+        [150, 100, 55, 255],
+        [185, 125, 65, 255],
+        [95, 120, 135, 255],
+        [120, 145, 85, 255],
+    ]
+
+    for row, y in enumerate((-2.65, 2.65)):
+        for x in (-2.6, -1.35, -0.1, 1.15, 2.4):
+            meshes.append(_mesh_box([x, y, 0.75], [0.06, 0.06, 1.5], rack_blue))
+            meshes.append(_mesh_box([x + 0.85, y, 0.75], [0.06, 0.06, 1.5], rack_blue))
+            for z in (0.45, 1.05, 1.55):
+                meshes.append(_mesh_box([x + 0.425, y, z], [0.95, 0.08, 0.06], shelf_orange))
+                meshes.append(_mesh_box([x + 0.425, y + (0.30 if y < 0 else -0.30), z], [0.95, 0.08, 0.06], shelf_orange))
+
+            color = crate_colors[(row + int((x + 3.0) * 2)) % len(crate_colors)]
+            crate_y = y + (0.16 if y < 0 else -0.16)
+            meshes.append(_mesh_box([x + 0.25, crate_y, 0.70], [0.34, 0.34, 0.36], color))
+            meshes.append(_mesh_box([x + 0.62, crate_y, 0.70], [0.34, 0.34, 0.36], color))
+            if x in (-1.35, 1.15):
+                meshes.append(_mesh_box([x + 0.45, crate_y, 1.30], [0.42, 0.32, 0.34], crate_colors[(row + 2) % len(crate_colors)]))
+
+    return _combine_meshes(meshes)
+
+
+def _warehouse_floor_markings():
+    yellow = [245, 190, 45, 235]
+    white = [220, 225, 230, 220]
+    strips = [
+        [[-3.2, -1.85, 0.03], [3.5, -1.85, 0.03]],
+        [[-3.2, 1.85, 0.03], [3.5, 1.85, 0.03]],
+        [[-3.2, -1.85, 0.03], [-3.2, 1.85, 0.03]],
+        [[3.5, -1.85, 0.03], [3.5, 1.85, 0.03]],
+        [[4.45, -0.2, 0.035], [3.4, -0.95, 0.035]],
+        [[4.45, 1.5, 0.035], [3.4, 2.25, 0.035]],
+    ]
+    rr.log("world/warehouse/floor_markings", rr.LineStrips3D(
+        strips=strips,
+        radii=0.018,
+        colors=[yellow],
+    ), static=True)
+
+    rr.log("world/warehouse/loading_lane", rr.LineStrips3D(
+        strips=[
+            [[4.35, -0.2, 0.04], [4.35, 1.5, 0.04]],
+            [[3.45, -0.95, 0.04], [3.45, 2.25, 0.04]],
+            [[4.35, -0.2, 0.04], [3.45, -0.95, 0.04]],
+            [[4.35, 1.5, 0.04], [3.45, 2.25, 0.04]],
+        ],
+        radii=0.012,
+        colors=[white],
+    ), static=True)
+
+
+def _warehouse_truss_lines():
+    strips = []
+    for x in np.linspace(-3.4, 4.1, 6):
+        strips.append([[x, -3.35, 4.05], [x, 3.35, 4.05]])
+        strips.append([[x, -3.35, 4.05], [x + 0.35, 0.0, 3.75]])
+        strips.append([[x + 0.35, 0.0, 3.75], [x, 3.35, 4.05]])
+
+    for y in (-3.3, 3.3):
+        strips.append([[-3.7, y, 3.2], [4.3, y, 3.2]])
+        strips.append([[-3.7, y, 2.2], [4.3, y, 2.2]])
+
+    rr.log("world/warehouse/trusses", rr.LineStrips3D(
+        strips=strips,
+        radii=0.009,
+        colors=[[120, 135, 150, 220]],
+    ), static=True)
+
+
 def _log_world():
     """Static world geometry logged once at startup."""
     try:
@@ -376,12 +482,21 @@ def _log_world():
     except AttributeError:
         pass
 
-    s = 5.0
-    rr.log("world/ground", rr.Mesh3D(
-        vertex_positions=[[-s,-s,0],[s,-s,0],[s,s,0],[-s,s,0]],
-        triangle_indices=[[0,1,2],[0,2,3]],
-        vertex_colors=[[32, 34, 38, 255]] * 4,
+    shell_v, shell_t, shell_c = _warehouse_shell_mesh()
+    rr.log("world/warehouse/shell", rr.Mesh3D(
+        vertex_positions=shell_v,
+        triangle_indices=shell_t,
+        vertex_colors=shell_c,
     ), static=True)
+
+    rack_v, rack_t, rack_c = _warehouse_rack_mesh()
+    rr.log("world/warehouse/racks", rr.Mesh3D(
+        vertex_positions=rack_v,
+        triangle_indices=rack_t,
+        vertex_colors=rack_c,
+    ), static=True)
+    _warehouse_floor_markings()
+    _warehouse_truss_lines()
 
     pad_meshes = [
         _mesh_disc([0.0, 0.0, 0.012], 0.48, [35, 35, 35, 255], 72),
@@ -435,6 +550,13 @@ def _log_world():
         strips=[_WAYPOINTS.tolist()],
         radii=0.012,
         colors=[[255, 210, 0]],
+    ), static=True)
+
+    wall_v, wall_t, wall_c = _mesh_box([3.0, 0.0, 2.1], [0.06, 6.4, 4.2], [210, 50, 40, 210])
+    rr.log("world/collision_wall", rr.Mesh3D(
+        vertex_positions=wall_v,
+        triangle_indices=wall_t,
+        vertex_colors=wall_c,
     ), static=True)
 
     rr.log("world/axes", rr.Arrows3D(

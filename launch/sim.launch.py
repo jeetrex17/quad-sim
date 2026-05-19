@@ -28,10 +28,15 @@ def generate_launch_description():
         output='screen',
     )
 
+    rl = Node(
+        package='drone_sim',
+        executable='rl_recovery_node.py',
+        output='screen',
+    )
+
     return LaunchDescription([
         dynamics,
         mekf,
         viz,
-        # wait for dynamics to be up before PID sends motor commands
-        TimerAction(period=1.5, actions=[pid]),
+        TimerAction(period=1.5, actions=[pid, rl]),
     ])

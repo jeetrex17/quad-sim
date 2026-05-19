@@ -68,8 +68,13 @@ Open the rerun viewer on the Mac host: `rerun`
 ## Training
 
 ```bash
-cd /ros2_ws/src/quad-sim/scripts
-python3 train_ppo.py   # ~8 min on CPU, saves quad_recovery_policy.zip
+cd /ros2_ws
+python3 scripts/train_ppo.py --timesteps 2000000 --n-envs 8
+```
+
+Evaluate the trained recovery policy:
+```bash
+ros2 run drone_sim evaluate_policy.py --episodes 200
 ```
 
 | Metric | Iter 1 | Iter 245 |
@@ -79,4 +84,4 @@ python3 train_ppo.py   # ~8 min on CPU, saves quad_recovery_policy.zip
 | explained_variance | 0.03 | 0.98 |
 | value_loss | 211 | 1.85 |
 
-500k PPO steps. Recovery from 90-100 deg tilt demonstrated live on ROS 2 topics.
+2M PPO steps. Recovery from high initial tilt can be evaluated with randomized trials.

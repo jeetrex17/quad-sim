@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import sys, os
+import warnings
 import numpy as np
 
 try:
@@ -15,10 +16,11 @@ from nav_msgs.msg import Odometry
 from std_msgs.msg import Float64MultiArray
 from geometry_msgs.msg import QuaternionStamped
 
+warnings.filterwarnings("ignore", message="Unable to import Axes3D.*")
 from stable_baselines3 import PPO
 
 W_HOVER          = 197.92
-W_SCALE          = 50.0
+W_SCALE          = 85.0
 ENGAGE_QW        = 0.707   # engage when tilt > 45 deg
 DISENGAGE_QW     = 0.940   # disengage when tilt < 20 deg (hysteresis)
 POLICY_PATH      = os.path.join(_lib_dir, 'quad_recovery_policy')

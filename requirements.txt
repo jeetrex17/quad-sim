@@ -4,3 +4,4 @@ rerun-sdk==0.32.1
 torch==2.5.1+cpu
 gymnasium
 stable-baselines3
+opencv-python-headless>=4.12,<5

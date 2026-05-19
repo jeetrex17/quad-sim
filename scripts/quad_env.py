@@ -33,9 +33,13 @@ except ModuleNotFoundError as e:
     ) from e
 
 W_HOVER  = qsc.W_HOVER
-W_SCALE  = 50.0    # motor delta from hover (rad/s)
+W_SCALE  = 85.0    # motor delta from hover (rad/s)
 DT       = 0.005   # physics timestep (s)
 MAX_STEPS = 600    # 3 s per episode
+SUCCESS_TILT_DEG = 12.0
+SUCCESS_OMEGA = 0.8
+SUCCESS_Z_ERROR = 0.35
+SUCCESS_HOLD_STEPS = int(round(0.20 / DT))
 
 _OBS_HIGH = np.array([
     10, 10, 10,        # position (m)
@@ -59,19 +63,28 @@ class QuadRecoveryEnv(gym.Env):
         self.action_space      = spaces.Box(-1.0, 1.0, shape=(4,), dtype=np.float32)
         self._state = qsc.QuadState()
         self._steps = 0
+        self._stable_steps = 0
+        self._prev_tilt = 0.0
 
     def reset(self, *, seed=None, options=None):
         super().reset(seed=seed)
         rng = self.np_random
 
         s = qsc.QuadState()
+        max_tilt_deg = 85.0
+        if options and "max_tilt_deg" in options:
+            max_tilt_deg = float(options["max_tilt_deg"])
 
-        # Curriculum: 30% easy (5-25 deg) so policy sees near-hover states,
-        # 70% hard (25-80 deg) for robustness
-        if rng.random() < 0.3:
-            angle = rng.uniform(0.09, 0.44)   # 5-25 deg
+        # Mixed curriculum: keep easy recoveries in distribution but force the
+        # policy to see aggressive attitudes often enough to learn recovery.
+        mode = rng.random()
+        if mode < 0.20:
+            angle_deg = rng.uniform(2.0, min(20.0, max_tilt_deg))
+        elif mode < 0.60:
+            angle_deg = rng.uniform(20.0, min(55.0, max_tilt_deg))
         else:
-            angle = rng.uniform(0.44, 1.40)   # 25-80 deg
+            angle_deg = rng.uniform(55.0, max_tilt_deg)
+        angle = np.deg2rad(angle_deg)
 
         axis  = rng.standard_normal(3)
         axis /= np.linalg.norm(axis) + 1e-8
@@ -88,6 +101,8 @@ class QuadRecoveryEnv(gym.Env):
 
         self._state = s
         self._steps = 0
+        self._stable_steps = 0
+        self._prev_tilt = self._tilt_rad(s)
         return self._obs(), {}
 
     def step(self, action):
@@ -98,10 +113,16 @@ class QuadRecoveryEnv(gym.Env):
         self._steps += 1
 
         obs        = self._obs()
-        reward     = self._reward()
-        terminated = self._is_done()
+        crashed    = self._crashed()
+        success    = self._success()
+        reward     = self._reward(action, success, crashed)
+        terminated = crashed or success
         truncated  = self._steps >= MAX_STEPS
-        return obs, reward, terminated, truncated, {}
+        return obs, reward, terminated, truncated, {
+            "success": success,
+            "crashed": crashed,
+            "tilt_deg": np.rad2deg(self._tilt_rad(self._state)),
+        }
 
     # ------------------------------------------------------------------
     def _obs(self):
@@ -111,33 +132,55 @@ class QuadRecoveryEnv(gym.Env):
                          s.qw, s.qx, s.qy, s.qz,
                          s.wx, s.wy, s.wz], dtype=np.float32)
 
-    def _reward(self):
+    def _tilt_rad(self, s):
+        return 2.0 * np.arccos(np.clip(abs(s.qw), 0.0, 1.0))
+
+    def _success(self):
         s = self._state
-        tilt       = 1.0 - s.qw * s.qw   # 0 upright, 0.5 at 90 deg
-        omega_sq   = s.wx**2 + s.wy**2 + s.wz**2
-        vel_sq     = s.vx**2 + s.vy**2 + s.vz**2
-        height_err = (s.pz - 1.0)**2
+        tilt_deg = np.rad2deg(self._tilt_rad(s))
+        omega = np.sqrt(s.wx**2 + s.wy**2 + s.wz**2)
+        z_error = abs(s.pz - 1.0)
 
-        # Explicit goal-state bonus: nearly upright + calm = clear target
-        # tilt < 0.05 is ~13 deg, omega_sq < 0.5 is ~0.7 rad/s per axis
-        stability_bonus = 2.0 if (tilt < 0.05 and omega_sq < 0.5) else 0.0
+        if tilt_deg <= SUCCESS_TILT_DEG and omega <= SUCCESS_OMEGA and z_error <= SUCCESS_Z_ERROR:
+            self._stable_steps += 1
+        else:
+            self._stable_steps = 0
+        return self._stable_steps >= SUCCESS_HOLD_STEPS
 
-        return float(
-             1.0                    # alive bonus
-           + stability_bonus        # goal state reward
-           - 2.5  * tilt           # stronger tilt penalty
-           - 0.1  * omega_sq       # damp angular rates
-           - 0.05 * vel_sq         # damp translation
-           - 0.2  * height_err     # hold z = 1 m
+    def _reward(self, action, success, crashed):
+        s = self._state
+        tilt = self._tilt_rad(s)
+        tilt_progress = self._prev_tilt - tilt
+        self._prev_tilt = tilt
+
+        omega_sq = s.wx**2 + s.wy**2 + s.wz**2
+        vel_sq = s.vx**2 + s.vy**2 + s.vz**2
+        z_error = s.pz - 1.0
+        action_sq = float(np.mean(np.square(action)))
+
+        reward = (
+            1.5
+            + 8.0 * tilt_progress
+            - 4.0 * (tilt / np.pi)
+            - 0.08 * omega_sq
+            - 0.04 * vel_sq
+            - 0.8 * z_error * z_error
+            - 0.015 * action_sq
         )
+        if self._stable_steps > 0:
+            reward += 0.10 * self._stable_steps
+        if success:
+            reward += 50.0
+        if crashed:
+            reward -= 50.0
+        return float(reward)
 
-    def _is_done(self):
+    def _crashed(self):
         s = self._state
         if s.pz < -0.1 or s.pz > 8.0:
             return True
         if abs(s.px) > 6.0 or abs(s.py) > 6.0:
             return True
-        # qw^2 < 0.5 means tilt > 90 deg, unrecoverable for this task
-        if s.qw * s.qw < 0.5:
+        if self._tilt_rad(s) > np.deg2rad(110.0):
             return True
         return False
