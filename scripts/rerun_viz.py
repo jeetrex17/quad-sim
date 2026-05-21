@@ -335,6 +335,28 @@ def _transform_mesh(mesh, center, q):
     return _qrot(qw, qx, qy, qz, vertices) + center, triangles, colors
 
 
+def _flight_cage_lines(xy=3.2, z=4.2):
+    corners = [
+        [-xy, -xy, 0.0], [xy, -xy, 0.0], [xy, xy, 0.0], [-xy, xy, 0.0],
+        [-xy, -xy, z],   [xy, -xy, z],   [xy, xy, z],   [-xy, xy, z],
+    ]
+    edges = [
+        (0, 1), (1, 2), (2, 3), (3, 0),
+        (4, 5), (5, 6), (6, 7), (7, 4),
+        (0, 4), (1, 5), (2, 6), (3, 7),
+    ]
+    return [[corners[a], corners[b]] for a, b in edges]
+
+
+def _gate_mesh(x, y, z, width=1.0, height=1.1, post=0.04):
+    color = [0, 165, 255, 230]
+    return _combine_meshes([
+        _mesh_box([x, y - width / 2.0, z + height / 2.0], [post, post, height], color),
+        _mesh_box([x, y + width / 2.0, z + height / 2.0], [post, post, height], color),
+        _mesh_box([x, y, z + height], [post, width + post, post], color),
+    ])
+
+
 def _drone_body_mesh():
     meshes = [
         _mesh_box([0.0, 0.0, 0.0], [0.25, 0.18, 0.055], [28, 32, 40, 255]),
@@ -353,6 +375,60 @@ def _log_world():
         rr.log("world", rr.ViewCoordinates.RIGHT_HAND_Z_UP, static=True)
     except AttributeError:
         pass
+
+    pad_meshes = [
+        _mesh_disc([0.0, 0.0, 0.012], 0.48, [35, 35, 35, 255], 72),
+        _mesh_disc([0.0, 0.0, 0.014], 0.34, [245, 245, 245, 255], 72),
+        _mesh_disc([0.0, 0.0, 0.016], 0.24, [35, 35, 35, 255], 72),
+        _mesh_box([0.0, 0.0, 0.02], [0.09, 0.45, 0.01], [255, 190, 40, 255]),
+        _mesh_box([0.0, 0.0, 0.022], [0.40, 0.08, 0.01], [255, 190, 40, 255]),
+    ]
+    pad_v, pad_t, pad_c = _combine_meshes(pad_meshes)
+    rr.log("world/landing_pad", rr.Mesh3D(
+        vertex_positions=pad_v,
+        triangle_indices=pad_t,
+        vertex_colors=pad_c,
+    ), static=True)
+
+    grid_lines = []
+    for i in range(-5, 6):
+        grid_lines.append([[-5.0, float(i), 0.001], [5.0, float(i), 0.001]])
+        grid_lines.append([[float(i), -5.0, 0.001], [float(i), 5.0, 0.001]])
+    rr.log("world/grid", rr.LineStrips3D(
+        strips=grid_lines,
+        radii=0.005,
+        colors=[[80, 80, 80]],
+    ), static=True)
+
+    rr.log("world/flight_cage", rr.LineStrips3D(
+        strips=_flight_cage_lines(),
+        radii=0.011,
+        colors=[[90, 140, 255, 190]],
+    ), static=True)
+
+    obstacle_meshes = [
+        _mesh_box([1.15, -1.15, 0.45], [0.18, 0.18, 0.90], [220, 70, 55, 235]),
+        _mesh_box([-1.25, 1.25, 0.65], [0.20, 0.20, 1.30], [220, 70, 55, 235]),
+        _gate_mesh(1.95, 0.85, 0.80),
+        _gate_mesh(-1.85, -0.85, 0.80),
+    ]
+    obs_v, obs_t, obs_c = _combine_meshes(obstacle_meshes)
+    rr.log("world/test_obstacles", rr.Mesh3D(
+        vertex_positions=obs_v,
+        triangle_indices=obs_t,
+        vertex_colors=obs_c,
+    ), static=True)
+
+    rr.log("world/mission/waypoints", rr.Points3D(
+        _WAYPOINTS,
+        radii=0.055,
+        colors=[[255, 210, 0]],
+    ), static=True)
+    rr.log("world/mission/reference_path", rr.LineStrips3D(
+        strips=[_WAYPOINTS.tolist()],
+        radii=0.012,
+        colors=[[255, 210, 0]],
+    ), static=True)
 
     wall_v, wall_t, wall_c = _mesh_box([3.0, 0.0, 2.1], [0.06, 6.4, 4.2], [210, 50, 40, 210])
     rr.log("world/collision_wall", rr.Mesh3D(

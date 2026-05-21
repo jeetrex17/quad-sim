@@ -10,7 +10,7 @@
 | Estimation | MEKF, 6-state error state, Joseph-form covariance update |
 | Control | Cascaded PID, X-config motor mixing |
 | RL | Gymnasium env, SB3 PPO, pybind11 C++ physics backend |
-| Viz | rerun.io, drone model, recovery wall, live trail, target, and telemetry plots |
+| Viz | rerun.io, drone model, flight cage, gates, recovery wall, live trail, target, and telemetry plots |
 | Middleware | ROS 2 Humble |
 
 ## Build
