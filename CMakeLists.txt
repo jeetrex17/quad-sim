@@ -36,6 +36,7 @@ install(TARGETS imu_sim drone_dynamics mekf DESTINATION lib/${PROJECT_NAME})
 install(DIRECTORY include/ DESTINATION include)
 
 install(PROGRAMS
+  scripts/benchmark.py
   scripts/evaluate_policy.py
   scripts/pid_controller.py
   scripts/quad_env.py

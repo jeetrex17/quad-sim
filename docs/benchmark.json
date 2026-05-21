@@ -1,0 +1,38 @@
+{
+  "seed": 7,
+  "pid": {
+    "duration_s": 28.0,
+    "rms_position_error_m": 0.821126831811835,
+    "mean_position_error_m": 0.7168282725462655,
+    "max_position_error_m": 1.2604953586076708,
+    "altitude_rmse_m": 0.17485602104543893,
+    "final_position_error_m": 0.05542821943103158,
+    "max_motor_speed_rad_s": 288.3299977379471
+  },
+  "mekf": {
+    "attitude_rmse_deg": 8.33981099206025,
+    "attitude_p95_deg": 11.495912440671848,
+    "roll_rmse_deg": 0.08308321300122977,
+    "pitch_rmse_deg": 0.08114384928395928,
+    "yaw_rmse_deg": 8.33901154786733,
+    "accel_updates": 5600,
+    "accel_skips": 0
+  },
+  "rl": {
+    "episodes": 200,
+    "successes": 200,
+    "crashes": 0,
+    "success_rate_pct": 100.0,
+    "crash_rate_pct": 0.0,
+    "mean_recovery_time_s": 0.47379999999999994,
+    "max_recovered_initial_tilt_deg": 84.92090154394546,
+    "mean_final_tilt_deg": 6.689547132767782,
+    "mean_z_error_m": 0.1056067106127739,
+    "mean_omega_norm_rad_s": 0.5096848836541176
+  },
+  "physics": {
+    "steps": 100000,
+    "elapsed_s": 0.3773277500004042,
+    "steps_per_second": 265021.5893209362
+  }
+}
