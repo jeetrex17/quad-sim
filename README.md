@@ -122,3 +122,11 @@ ros2 run drone_sim evaluate_policy.py --episodes 200
 | value_loss | 211 | 1.85 |
 
 2M PPO steps. Recovery from high initial tilt can be evaluated with randomized trials.
+
+## References
+
+- [Quadcopter Dynamics and Simulation](https://andrew.gibiansky.com/blog/physics/quadcopter-dynamics/) (Gibiansky)
+- [Drone Simulation and Control](https://youtube.com/playlist?list=PLn8PRpmsu08o4BS-QJ6FCRyYOKWSEcB9k) (Brian Douglas, MATLAB Tech Talks)
+- [Understanding PID Control](https://youtube.com/@BrianBDouglas) (Brian Douglas)
+- [Quadrotor Dynamics and Control](https://scholarsarchive.byu.edu/facpub/1325/) (Beard, BYU)
+- [Stable-Baselines3 Documentation](https://stable-baselines3.readthedocs.io/)
