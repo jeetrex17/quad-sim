@@ -1,5 +1,7 @@
 # quad-sim
 
+![quad-sim Rerun demo](docs/demo.gif)
+
 6-DOF quadrotor simulator with cascaded PID control, MEKF attitude estimation, and a PPO-trained attitude recovery policy. Physics core in C++17, exposed to Python via pybind11 for RL training and offline benchmarking.
 
 ## Stack
